@@ -26,6 +26,8 @@
 #include "Thread.h"
 #include <string>
 
+#include "CallStack.hpp"
+
 class CNextion : public CDisplay
 {
 public:
@@ -103,7 +105,7 @@ private:
   double        m_fl_txFrequency;
   double        m_fl_rxFrequency;
   bool          m_displayTempInF;
-  
+  CallStack     m_cStack; 
   void sendCommand(const char* command);
   void sendCommandAction(unsigned int status);
 };

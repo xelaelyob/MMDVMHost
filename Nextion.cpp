@@ -72,7 +72,8 @@ m_txFrequency(txFrequency),
 m_rxFrequency(rxFrequency),
 m_fl_txFrequency(0.0F),
 m_fl_rxFrequency(0.0F),
-m_displayTempInF(displayTempInF)
+m_displayTempInF(displayTempInF),
+m_cStack()
 {
 	assert(serial != NULL);
 	assert(brightness >= 0U && brightness <= 100U);
@@ -619,6 +620,24 @@ void CNextion::writeFusionInt(const char* source, const char* dest, unsigned cha
 	sendCommand(text);
 	sendCommandAction(82U);
 
+	//Okay check the source and add to stack if it is not the last person 
+	//talking 
+	if(!m_cStack.peek()){
+		m_cStack.push(source);
+		printf("Pushed to %s to stack\n", source);
+	}else{
+		if(strcmp(source, m_cStack.peek())){
+			m_cStack.push(source);
+		}
+	}
+
+	if(m_cStack.peekn(1)){
+		::sprintf(text, "t0bis.txt=\"%s\"", m_cStack.peekn(1));
+	}else{
+		::sprintf(text, "t0bis.txt=\"\"");
+	}
+	sendCommand(text);
+
 	::sprintf(text, "t1.txt=\"DG-ID %u\"", dgid);
 	sendCommand(text);
 	sendCommandAction(83U);
@@ -671,7 +690,13 @@ void CNextion::writeFusionBERInt(float ber)
 void CNextion::clearFusionInt()
 {
 	sendCommand("t0.txt=\"Listening\"");
-	sendCommandAction(81U);
+	if(m_cStack.peek()){
+		printf("Sending top of stack %s\n", m_cStack.peek());
+		char text[30U] = {0};
+		::sprintf(text, "t0bis.txt=\"%s\"", m_cStack.peek());
+		sendCommand(text);
+	}
+
 	sendCommand("t1.txt=\"\"");
 	sendCommand("t2.txt=\"\"");
 	sendCommand("t3.txt=\"\"");
